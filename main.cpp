@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
 
     Token* tk = scanner.nextToken();
     while (tk->type != END) {
-        std::cout << "Next Token " << *tk << std::endl;
+        std::cout << *tk << std::endl;
         delete tk;
         tk =  scanner.nextToken();
     }

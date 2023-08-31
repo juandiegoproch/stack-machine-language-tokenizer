@@ -102,7 +102,7 @@ public:
 std::ostream& operator<<(std::ostream& os, const Token& token) {
     os << token_names[token.type];
     if (!token.lexeme.empty()) {
-        os << " Lexeme: "<< token.lexeme;
+        os << "("<< token.lexeme << ")";
     }
     return os;
 }
