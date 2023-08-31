@@ -30,7 +30,9 @@ enum Type {
     MUL,
     DIV,
     STORE,
-    LOAD
+    LOAD,
+    LABEL,
+    PUSH
 };
 
 std::vector<std::string> token_names = {
@@ -54,7 +56,9 @@ std::vector<std::string> token_names = {
         "MUL",
         "DIV",
         "STORE",
-        "LOAD"
+        "LOAD",
+        "LABEL",
+        "PUSH"
 };
 
 std::unordered_map<std::string, Type> hashtable {
@@ -74,6 +78,7 @@ std::unordered_map<std::string, Type> hashtable {
     {"div", DIV},
     {"store", STORE},
     {"load", LOAD},
+    {"push", PUSH}
 };
 
 class Token {
@@ -97,7 +102,7 @@ public:
 std::ostream& operator<<(std::ostream& os, const Token& token) {
     os << token_names[token.type];
     if (!token.lexeme.empty()) {
-        os << token.lexeme;
+        os << " Lexeme: "<< token.lexeme;
     }
     return os;
 }

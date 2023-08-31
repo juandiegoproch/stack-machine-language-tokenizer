@@ -6,11 +6,18 @@
 
 class Scanner {
 private:
+/*
+    'first' points to the start of the lexeme
+    'current' points to currently seen character
+
+    int test_variable = 0;
+        ^first   ^current
+*/
     std::string input;
     int first, current;
     int state;
 
-    char nextChar(){
+    char nextChar(){ // advance
         char c = input[current];
         if (c != '\0') {
             ++current;
@@ -18,13 +25,13 @@ private:
         return c;
     }
 
-    void rollBack(){
+    void rollBack(){ // spit
         if (input[current] != '\0'){
             --current;
         }
     }
 
-    void startLexeme(){
+    void startLexeme(){ 
         first = current - 1;
     }
 
@@ -32,8 +39,11 @@ private:
         ++first;
     }
 
-    std::string getLexeme(){
-        return input.substr(first, current - first);
+    std::string getLexeme(){ // cut and return lexeme
+        std::string a = input.substr(first, current - first);
+        for (auto& i:a) // I hate CPP and strings...
+            i = tolower(i);
+        return a;
     }
 
     static Token* verifyKeywords(const std::string& lexeme) {
@@ -57,11 +67,14 @@ public:
 
         startLexeme();
 
+        // Implemented automata:
+
         while (1) {
             switch (state) {
                 case 0: {
-                    if (c == ' ') {
+                    if (c == ' ' || c == '\t') { // skip whitespace
                         incrementStartLexeme();
+                        c = nextChar(); // advance over the whitespace
                         state = 0;
                     }
                     else if (isalpha(c)) {
@@ -79,36 +92,49 @@ public:
                     break;
                 }
                 case 1: {
-                    c = nextChar();
+                    c = nextChar(); // Keep consuming stuff.
                     if (c == ':') {
-                        state = 3;
+                        state = 3; // label
                     }
                     else if (isalnum(c) || c == '_') {
                         state = 1;
                     }
                     else {
-                        state = 2;
+                        state = 2; // id
                     }
                     break;
                 }
                 case 2: {
+                    // Discriminate keywords, Return ID if not a keyword
                     rollBack();
                     return verifyKeywords(getLexeme());
                 }
                 case 3: {
-
+                    return new Token(LABEL,getLexeme());
                     break;
                 }
                 case 4: {
-
+                    c = nextChar(); // keep conusming stuff
+                    if (isdigit(c))
+                        state = 1;
+                    else
+                        state = 5;
                     break;
                 }
                 case 5: {
+                    // emmit a number
+                    rollBack();
+                    return new Token(NUM,getLexeme());
 
                     break;
                 }
                 case 6: {
-
+                    c = nextChar();
+                    if (c != '\n')
+                    {
+                        rollBack();
+                        return new Token(EOL);
+                    }
                     break;
                 }
                 case 7: {
@@ -120,39 +146,6 @@ public:
                 }
             }
         }
-
-
-        for (; (c == ' ') || (c == '\t'); c = nextChar());
-
-        if (isalpha(c)) {
-            for (; isalnum(c) || c == '_'; c = nextChar());
-            rollBack();
-            std::string lexeme = getLexeme();
-            auto it = hashtable.find(lexeme);
-            if (it != hashtable.end()) {
-                return new Token(it->second);
-            }
-            return new Token(ID, getLexeme());
-        }
-
-        if (isdigit(c)) {
-            for (; isdigit(c); c = nextChar());
-            rollBack();
-            return new Token(NUM, getLexeme());
-        }
-
-        if (c == '\n') {
-            for (; c == '\n'; c = nextChar());
-            rollBack();
-            return new Token(EOL);
-        }
-
-        if (c == '\0') {
-            return new Token(END);
-        }
-
-        return new Token(ERR);
-
     }
 
     ~Scanner() = default;
@@ -168,7 +161,7 @@ int main(int argc, char** argv) {
 
     Token* tk = scanner.nextToken();
     while (tk->type != END) {
-        std::cout << "next token " << *tk << std::endl;
+        std::cout << "Next Token " << *tk << std::endl;
         delete tk;
         tk =  scanner.nextToken();
     }
